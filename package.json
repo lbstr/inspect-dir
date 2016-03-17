@@ -1,0 +1,14 @@
+{
+  "name": "inspect-dir",
+  "version": "1.0.0",
+  "description": "Tiny app for listing directory contents",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Jared Barnett",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.13.4"
+  }
+}
