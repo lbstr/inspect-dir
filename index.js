@@ -3,19 +3,30 @@ var http = require('http');
 var router = require('router')();
 var directoryService = require('./directoryService.js');
 
-router.get('/', function(req, res) {
-  var files = directoryService.getFiles(__dirname);
 
-  sendJson(files, res);
+
+router.get('/', function(req, res) {
+  var targetDirectory = __dirname;
+  var files = directoryService.getFiles(targetDirectory);
+
+  res.setHeader('Content-Type', 'application/json');
+  res.end(JSON.stringify(files, null, 2));
 });
 
-function sendJson(obj, res) {
-  res.setHeader('Content-Type', 'application/json');
-  res.end(JSON.stringify(obj, null, 2));
-}
+
+
 
 var server = http.createServer(function(req, res) {
   router(req, res, finalhandler(req, res));
 });
 
 server.listen(8123);
+
+
+/*
+
+Where to define:
+  port
+  targetDirectory
+
+*/
