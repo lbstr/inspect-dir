@@ -1,11 +1,11 @@
-var finalhandler = require('finalhandler');
-var http = require('http');
-var router = require('router')();
+// Services
 var directoryService = require('./services/directoryService');
 
+// Express
+var express = require('express');
+var app = express();
 
-
-router.get('/', function(req, res) {
+app.get('/', function(req, res) {
   var targetDirectory = __dirname;
   var files = directoryService.getFiles(targetDirectory);
 
@@ -13,20 +13,4 @@ router.get('/', function(req, res) {
   res.end(JSON.stringify(files, null, 2));
 });
 
-
-
-
-var server = http.createServer(function(req, res) {
-  router(req, res, finalhandler(req, res));
-});
-
-server.listen(8123);
-
-
-/*
-
-Where to define:
-  port
-  targetDirectory
-
-*/
+app.listen(8123);
