@@ -1,15 +1,4 @@
-module.exports = function(env) {
-  switch(env) {
-    case "production": 
-      return {
-        PORT: 8123,
-        BASE_DIRECTORY: __dirname
-      };
-    case "development":
-    default:
-      return {
-        PORT: 8123,
-        BASE_DIRECTORY: __dirname
-      };
-  }
+module.exports = {
+  PORT: process.env.INSPECT_PORT || 8080,
+  BASE_DIRECTORY: process.env.INSPECT_DIR || __dirname
 };

@@ -1,10 +1,9 @@
 // Config
-var env = process.env.NODE_ENV || 'development';
-var Config = require('./config');
-var config = Config(env);
+var config = require('./config');
 
 // Services
-var directoryService = require('./services/directoryService');
+var FileService = require('./services/FileService');
+var fileService = new FileService(config.BASE_DIRECTORY);
 
 // Express
 var express = require('express');
@@ -14,12 +13,13 @@ var app = express();
 var router = express.Router();
 
 router.get('/', function(req, res) {
-  var files = directoryService.getFiles(config.BASE_DIRECTORY);
+  var files = fileService.getAll();
 
   res.json(files);
 });
 
-app.use('/api', router);
+app.use('/', router);
 
 // Port binding
 app.listen(config.PORT);
+console.log("Listening on port %d", config.PORT);
