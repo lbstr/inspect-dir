@@ -9,8 +9,7 @@ app.get('/', function(req, res) {
   var targetDirectory = __dirname;
   var files = directoryService.getFiles(targetDirectory);
 
-  res.setHeader('Content-Type', 'application/json');
-  res.end(JSON.stringify(files, null, 2));
+  res.json(files);
 });
 
 app.listen(8123);
