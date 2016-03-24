@@ -11,13 +11,15 @@ var express = require('express');
 var app = express();
 
 // Routing
-app.get('/', function(req, res) {
+var router = express.Router();
+
+router.get('/', function(req, res) {
   var files = directoryService.getFiles(config.BASE_DIRECTORY);
 
   res.json(files);
 });
 
-
+app.use('/api', router);
 
 // Port binding
 app.listen(config.PORT);
