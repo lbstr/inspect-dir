@@ -1,7 +1,7 @@
 var finalhandler = require('finalhandler');
 var http = require('http');
 var router = require('router')();
-var directoryService = require('./directoryService.js');
+var directoryService = require('./services/directoryService');
 
 
 
