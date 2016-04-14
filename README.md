@@ -36,7 +36,7 @@ This was built as a proof of concept for a larger application. I wanted to have 
 
 ## TODO
 
-- [ ] Decide how to declare the chosen directory (e.g. env variable, parameter, config file)
-- [ ] Use async methods
+- [x] Decide how to declare the chosen directory (e.g. env variable, parameter, config file)
+- [x] Use async methods
 - [ ] Add usage and examples to README
 
