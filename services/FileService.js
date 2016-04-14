@@ -2,10 +2,18 @@ var fs = require('fs');
 var crypto = require('crypto');
 var path = require('path');
 
+module.exports = FileService;
+
 function FileService(baseDirectory) {
   var ROOT = baseDirectory;
 
-  var getFileNames = function(directoryPath) {
+  return {
+    getAll: function() {
+      return getFiles(ROOT);
+    }
+  };
+
+  function getFileNames(directoryPath) {
     var files = [];
 
     try {
@@ -16,9 +24,9 @@ function FileService(baseDirectory) {
     }
 
     return files;
-  };
+  }
 
-  var getFileStats = function(filePath) {
+  function getFileStats(filePath) {
     try {
       return fs.statSync(filePath);
     }
@@ -26,9 +34,9 @@ function FileService(baseDirectory) {
       console.error('Unable to read the file provided: ' + filePath);
       return null;
     }
-  };
+  }
 
-  var getSha1Checksum = function(filePath) {
+  function getSha1Checksum(filePath) {
     var fileData = fs.readFileSync(filePath);
     var checksum = crypto
       .createHash('sha1')
@@ -36,9 +44,9 @@ function FileService(baseDirectory) {
       .digest('hex');
 
     return checksum;
-  };
+  }
 
-  var getFileMeta = function(filePath, fileStats) {
+  function getFileMeta(filePath, fileStats) {
     var sha1 = getSha1Checksum(filePath);
 
     var meta = {
@@ -52,9 +60,9 @@ function FileService(baseDirectory) {
     };
 
     return meta;
-  };
+  }
 
-  var getFiles = function(directoryPath) {
+  function getFiles(directoryPath) {
     var files = [];
     var fileNames = getFileNames(directoryPath);
 
@@ -68,13 +76,5 @@ function FileService(baseDirectory) {
     });
 
     return files;
-  };
-
-  return {
-    getAll: function() {
-      return getFiles(ROOT);
-    }
   }
 };
-
-module.exports = FileService;

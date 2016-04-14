@@ -12,7 +12,7 @@ var app = express();
 // Routing
 var router = express.Router();
 
-router.get('/', function(req, res) {
+router.get('/files', function(req, res) {
   var files = fileService.getAll();
 
   res.json(files);
