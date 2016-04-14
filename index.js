@@ -12,13 +12,21 @@ var app = express();
 // Routing
 var router = express.Router();
 
-router.get('/files', function(req, res) {
-  var files = fileService.getAll();
-
-  res.json(files);
+router.get('/files', function(req, res, next) {
+  fileService.getAll(function(files) {
+    res.json(files);
+  }, function(err) {
+    next(err);
+  });
 });
 
 app.use('/', router);
+
+// Error handling
+app.use(function(err, req, res, next) {
+  console.error(err);
+  res.status(500).send('Something broke!');
+});
 
 // Port binding
 app.listen(config.PORT);

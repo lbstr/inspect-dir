@@ -1,6 +1,7 @@
 var fs = require('fs');
 var crypto = require('crypto');
 var path = require('path');
+var Q = require('q');
 
 module.exports = FileService;
 
@@ -8,47 +9,110 @@ function FileService(baseDirectory) {
   var ROOT = baseDirectory;
 
   return {
-    getAll: function() {
-      return getFiles(ROOT);
-    }
+    getAll: getAll
   };
 
-  function getFileNames(directoryPath) {
-    var files = [];
+  function getAll(success, error) {
+    var promise = getFilePaths(ROOT)
+      .then(getDataForFiles)
+      .then(success)
+      .fail(error);
 
-    try {
-      files = fs.readdirSync(directoryPath);
-    }
-    catch(e) {
-      throw 'Unable to read the directory provided: ' + directoryPath;
-    }
-
-    return files;
+    return promise;
   }
 
-  function getFileStats(filePath) {
-    try {
-      return fs.statSync(filePath);
-    }
-    catch(e) {
-      console.error('Unable to read the file provided: ' + filePath);
-      return null;
-    }
+  function getFilePaths(directory) {
+    var dfd = Q.defer();
+
+    fs.readdir(directory, function(err, fileNames) {
+      if (err) {
+        dfd.reject(err);
+        return;
+      }
+      
+      var filePaths = fileNames.map(function(fileName) {
+        return path.join(directory, fileName);
+      });
+
+      dfd.resolve(filePaths);
+    });
+
+    return dfd.promise;
   }
 
-  function getSha1Checksum(filePath) {
-    var fileData = fs.readFileSync(filePath);
-    var checksum = crypto
-      .createHash('sha1')
-      .update(fileData, 'utf8')
-      .digest('hex');
+  function getDataForFiles(filePaths) {
+    var promise = Q.all(filePaths.map(getDataForFile))
+      .then(filterOutBadFiles);
 
-    return checksum;
+    return promise;
   }
 
-  function getFileMeta(filePath, fileStats) {
-    var sha1 = getSha1Checksum(filePath);
+  function getDataForFile(filePath) {
+    var dfd = Q.defer();
 
+    fs.stat(filePath, function(err, stats) {
+      if (err) {
+        dfd.reject(err);
+        return;
+      }
+
+      if (!stats || !stats.isFile()) {
+        dfd.resolve(null);
+        return;
+      }
+
+      getChecksum(filePath)
+        .then(function(checksum) {
+          var fileData = makeFileData(filePath, stats, checksum);
+
+          dfd.resolve(fileData);
+        }, function(err){
+          dfd.reject(err);
+        });
+    });
+
+    return dfd.promise;
+  }
+
+  function getChecksum(filePath, callback) {
+    var dfd = Q.defer();
+
+    var stream = fs.createReadStream(filePath);
+    var hash = crypto.createHash('sha1');
+    hash.setEncoding('hex');
+
+    var tookTooLong = false;
+    var checksumTimeout = setTimeout(function(){
+      tookTooLong = true;
+      stream.destroy();
+    }, 5000);
+
+    stream.pipe(hash);
+    stream.on('error', function(err) {
+      dfd.reject(err);
+    });
+    stream.on('close', function(){
+      if (tookTooLong) {
+        dfd.resolve(null);
+      }
+    });
+    stream.on('end', function() {
+      var sum = null;
+
+      hash.end();
+
+      if (!tookTooLong) {
+        clearTimeout(checksumTimeout);
+        sum = hash.read();
+      }
+
+      dfd.resolve(sum);
+    });
+
+    return dfd.promise;
+  }
+
+  function makeFileData(filePath, fileStats, checksum) {
     var meta = {
       path: filePath,
       bytes: fileStats.size,
@@ -56,25 +120,15 @@ function FileService(baseDirectory) {
       lastModified: fileStats.mtime,
       lastModifiedFileStatus: fileStats.ctime,
       dateCreated: fileStats.birthtime,
-      sha1: sha1
+      checksum: checksum
     };
 
     return meta;
   }
 
-  function getFiles(directoryPath) {
-    var files = [];
-    var fileNames = getFileNames(directoryPath);
-
-    fileNames.forEach(function(fileName) {
-      var fullPath = path.join(directoryPath, fileName);
-      var stats = getFileStats(fullPath);
-
-      if (stats && stats.isFile()) {
-        files.push(getFileMeta(fullPath, stats));
-      }
+  function filterOutBadFiles(files) {
+    return files.filter(function(file) {
+      return !!file && !!file.checksum;
     });
-
-    return files;
   }
 };
