@@ -76,17 +76,16 @@ function FileService(baseDirectory) {
 
   function getChecksum(filePath, callback) {
     var dfd = Q.defer();
-
     var stream = fs.createReadStream(filePath);
     var hash = crypto.createHash('sha1');
-    hash.setEncoding('hex');
-
-    var tookTooLong = false;
+    var finishedOnTime = true;
     var checksumTimeout = setTimeout(function(){
-      tookTooLong = true;
+      finishedOnTime = false;
       stream.destroy();
-    }, 5000);
+      console.log("Checksum timed out: ", filePath);
+    }, 10000);
 
+    hash.setEncoding('hex');
     stream.pipe(hash);
     stream.on('error', function(err) {
       dfd.reject(err);
@@ -101,7 +100,7 @@ function FileService(baseDirectory) {
 
       hash.end();
 
-      if (!tookTooLong) {
+      if (finishedOnTime) {
         clearTimeout(checksumTimeout);
         sum = hash.read();
       }
