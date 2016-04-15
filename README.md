@@ -34,9 +34,3 @@ node index.js
 
 This was built as a proof of concept for a larger application. I wanted to have a working version of a small app that gives me certain information on the files in a particular directory. I'd like to make this useful for others. 
 
-## TODO
-
-- [x] Decide how to declare the chosen directory (e.g. env variable, parameter, config file)
-- [x] Use async methods
-- [ ] Add usage and examples to README
-
