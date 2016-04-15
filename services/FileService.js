@@ -5,49 +5,12 @@ var Q = require('q');
 
 module.exports = FileService;
 
-function FileService(baseDirectory) {
-  var ROOT = baseDirectory;
-
+function FileService() {
   return {
-    getAll: getAll
+    getMeta: getMeta
   };
 
-  function getAll(success, error) {
-    var promise = getFilePaths(ROOT)
-      .then(getDataForFiles)
-      .then(success)
-      .fail(error);
-
-    return promise;
-  }
-
-  function getFilePaths(directory) {
-    var dfd = Q.defer();
-
-    fs.readdir(directory, function(err, fileNames) {
-      if (err) {
-        dfd.reject(err);
-        return;
-      }
-      
-      var filePaths = fileNames.map(function(fileName) {
-        return path.join(directory, fileName);
-      });
-
-      dfd.resolve(filePaths);
-    });
-
-    return dfd.promise;
-  }
-
-  function getDataForFiles(filePaths) {
-    var promise = Q.all(filePaths.map(getDataForFile))
-      .then(filterOutBadFiles);
-
-    return promise;
-  }
-
-  function getDataForFile(filePath) {
+  function getMeta(filePath) {
     var dfd = Q.defer();
 
     fs.stat(filePath, function(err, stats) {
@@ -57,7 +20,7 @@ function FileService(baseDirectory) {
       }
 
       if (!stats || !stats.isFile()) {
-        dfd.resolve(null);
+        dfd.reject(!!stats ? 'Not a file' : 'Failed to get data on file');
         return;
       }
 
@@ -91,7 +54,7 @@ function FileService(baseDirectory) {
       dfd.reject(err);
     });
     stream.on('close', function(){
-      if (tookTooLong) {
+      if (!finishedOnTime) {
         dfd.resolve(null);
       }
     });
@@ -124,10 +87,4 @@ function FileService(baseDirectory) {
 
     return meta;
   }
-
-  function filterOutBadFiles(files) {
-    return files.filter(function(file) {
-      return !!file && !!file.checksum;
-    });
-  }
-};
+}

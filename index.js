@@ -2,8 +2,8 @@
 var config = require('./config');
 
 // Services
-var FileService = require('./services/FileService');
-var fileService = new FileService(config.BASE_DIRECTORY);
+var DirectoryService = require('./services/DirectoryService');
+var directoryService = new DirectoryService(config.BASE_DIRECTORY);
 
 // Express
 var express = require('express');
@@ -13,11 +13,13 @@ var app = express();
 var router = express.Router();
 
 router.get('/files', function(req, res, next) {
-  fileService.getAll(function(files) {
-    res.json(files);
-  }, function(err) {
-    next(err);
-  });
+  directoryService.getFileMeta()
+    .then(function(fileMeta){
+      res.json(fileMeta);
+    })
+    .fail(function(err) {
+      next(err);
+    });
 });
 
 app.use('/', router);
